@@ -29,6 +29,7 @@ class InfoRetrieval:
     def removeStopWords(self,tokens):
         cleaned_token = [x for x in tokens if not x in nltk.corpus.stopwords.words()]
         return cleaned_token
+    
     #returns a list containg all clean words from a doc
     def clean(self,raw_str):
         lower_tokens = self.tokenize(raw_str)
@@ -82,41 +83,133 @@ class InfoRetrieval:
                 two_words.append(item[0])
         return two_words
     
-    def reordering(self,query,):
-        pass
+    def reordering(self,query,relevant_docs):    
+        # Extract word positions
+        word_positions = {}
+        for word in query:
+            positions = []
+            for doc in relevant_docs:
+                for i, token in enumerate(doc):
+                    if token == word:
+                        positions.append(i)
+            word_positions[word] = positions    
+        # Calculate average positions
+        avg_positions = {}
+        for word in word_positions:
+            positions = word_positions[word]
+            avg_positions[word] = sum(positions) / len(positions) if positions else float('inf')
+        
+        # Reorder the query
+        sorted_words = sorted(query, key=lambda w: avg_positions[w])
+        reordered_query = ' '.join(sorted_words)
+        return reordered_query
+    
+
+    def feedback(self,res):
+        '''
+        Records user's feedback on wheter a document is relevant or not 
+            Parameter: res - a dic returned by Google Search API
+            Returns: all relevant documents
+        '''
+        all_results = res['items']
+        relevant_docs = []
+        all_docs = []
+        for i in range (len(all_results)):
+            print(
+            "=================================================================================")
+            print("Result " + str(i+1))
+            print("URL: " + all_results[i]['formattedUrl'])
+            print("Title: " + all_results[i]["title"])
+            print("Summary: " + all_results[i]['snippet'])
+            
+            feedback = input('Relevant (Y/N)')
+            while feedback.lower() != 'y' and feedback.lower() != 'n':
+                print("Please enter a valid input! (Y/N)")
+                feedback = input('Relevant (Y/N)')
+            title = self.clean(all_results[i]['title'])
+            snip = self.clean(all_results[i]['snippet'])
+            words = title + snip
+            if feedback.lower() == 'y':
+                relevant_docs.append(words)
+            all_docs.append(words)
+        return relevant_docs,all_docs
+        
 
     def main(self):
+        # api_key = sys.argv[1]
+        # eng_id = sys.argv[2]
+        # threshold = float(sys.argv[3])
+        # query = sys.argv[4]
+#         service = build("customsearch", "v1",
+#                 developerKey=api_key)
+# #dict_keys(['kind', 'title', 'htmlTitle', 'link', 'displayLink', 
+# #'snippet', 'htmlSnippet', 'formattedUrl', 'htmlFormattedUrl', 'pagemap'])
+#         res = service.cse().list(
+#             q=query,
+#             cx=eng_id,
+#         ).execute()
+        # print(res["items"][0]['title'])
+        # snip = res["items"][0]['snippet']
+        # print(snip)
+        # cleaned = self.clean(snip)
+        # print(cleaned)
+        # dic = self.cal_tf(cleaned)
+        # print(dic)
+        # print(res["items"][0]['htmlSnippet'])
+        # all_docs = []
+        # for doc in res["items"]:
+        #     title = self.clean(doc['title'])
+        #     snip = self.clean(doc['snippet'])
+        #     words = title + snip
+        #     all_docs.append(words)
+        # relevant_docs = [all_docs[1],all_docs[3],all_docs[4]]
+        # tf_idf = self.cal_tfIdf(relevant_docs,all_docs)
+        # print(tf_idf)
+        # two_words = self.get_top2(tf_idf,["lebron"])
+        # print(two_words)
+        # new_query = [query]+two_words
+        # print(new_query)
+        # sorted_query = self.reordering(new_query,relevant_docs)
+        # print(sorted_query)
+
+        # relevant_docs = self.feedback(res)
+        # print(relevant_docs)
+        precision = 0
+        iteration = 1
+        success = True
         api_key = sys.argv[1]
         eng_id = sys.argv[2]
         threshold = float(sys.argv[3])
         query = sys.argv[4]
-        service = build("customsearch", "v1",
-                developerKey=api_key)
-#dict_keys(['kind', 'title', 'htmlTitle', 'link', 'displayLink', 
-#'snippet', 'htmlSnippet', 'formattedUrl', 'htmlFormattedUrl', 'pagemap'])
-        res = service.cse().list(
-            q=query,
-            cx=eng_id,
-        ).execute()
-        print(res["items"][0]['title'])
-        snip = res["items"][0]['snippet']
-        print(snip)
-        cleaned = self.clean(snip)
-        print(cleaned)
-        dic = self.cal_tf(cleaned)
-        print(dic)
-        print(res["items"][0]['htmlSnippet'])
-        all_docs = []
-        for doc in res["items"]:
-            title = self.clean(doc['title'])
-            snip = self.clean(doc['snippet'])
-            words = title + snip
-            all_docs.append(words)
-        relevant_docs = [all_docs[1],all_docs[3],all_docs[4]]
-        tf_idf = self.cal_tfIdf(relevant_docs,all_docs)
-        print(tf_idf)
-        two_words = self.get_top2(tf_idf,["lebron"])
-        print(two_words)
+        # Loop when desired precision has not been reached and Google API returns some results 
+        while(precision < threshold):
+            service = build("customsearch", "v1", developerKey=api_key)
+            res = service.cse().list(q=query,cx=eng_id).execute()
+            # Output iteration number and search query
+            print('\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+            print("Iteration {}\nQuery     = {}\nPrecision = {} ".format(iteration,query,precision))
+            print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n')
+            relevant_docs,all_docs = self.feedback(res) 
+            # Check if query was successful
+            if len(relevant_docs) == 0:
+                print("\nOops! Even google has no idea about what you're looking for")
+                print("Please enter another query so that google can return at least one relevant result for you!")
+                success = False
+                break
+            #check if precision has achieved 
+            precision = len(relevant_docs)/len(all_docs)
+            if precision >= threshold:
+                break
+
+            tfIdf = self.cal_tfIdf(relevant_docs,all_docs)
+            two_words = self.get_top2(tfIdf,query.split())
+            new_query = query.split() + two_words
+            reordered_query = self.reordering(new_query,relevant_docs)
+            query = reordered_query
+            iteration += 1
+
+        if success:
+            print("Precesion got! Your final query is " + query)
 
 if __name__ == '__main__':
     ir = InfoRetrieval()
