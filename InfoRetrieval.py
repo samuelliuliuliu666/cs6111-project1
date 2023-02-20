@@ -76,7 +76,6 @@ class InfoRetrieval:
     #query : list of words ; 
     def get_top2(self,tfIdf,query):
         sorted_words = sorted(tfIdf.items(), key=lambda x: x[1], reverse=True)
-        print(sorted_words)
         two_words = []
         for item in sorted_words:
             if item not in query and len(two_words) < 2:
@@ -136,44 +135,6 @@ class InfoRetrieval:
         
 
     def main(self):
-        # api_key = sys.argv[1]
-        # eng_id = sys.argv[2]
-        # threshold = float(sys.argv[3])
-        # query = sys.argv[4]
-#         service = build("customsearch", "v1",
-#                 developerKey=api_key)
-# #dict_keys(['kind', 'title', 'htmlTitle', 'link', 'displayLink', 
-# #'snippet', 'htmlSnippet', 'formattedUrl', 'htmlFormattedUrl', 'pagemap'])
-#         res = service.cse().list(
-#             q=query,
-#             cx=eng_id,
-#         ).execute()
-        # print(res["items"][0]['title'])
-        # snip = res["items"][0]['snippet']
-        # print(snip)
-        # cleaned = self.clean(snip)
-        # print(cleaned)
-        # dic = self.cal_tf(cleaned)
-        # print(dic)
-        # print(res["items"][0]['htmlSnippet'])
-        # all_docs = []
-        # for doc in res["items"]:
-        #     title = self.clean(doc['title'])
-        #     snip = self.clean(doc['snippet'])
-        #     words = title + snip
-        #     all_docs.append(words)
-        # relevant_docs = [all_docs[1],all_docs[3],all_docs[4]]
-        # tf_idf = self.cal_tfIdf(relevant_docs,all_docs)
-        # print(tf_idf)
-        # two_words = self.get_top2(tf_idf,["lebron"])
-        # print(two_words)
-        # new_query = [query]+two_words
-        # print(new_query)
-        # sorted_query = self.reordering(new_query,relevant_docs)
-        # print(sorted_query)
-
-        # relevant_docs = self.feedback(res)
-        # print(relevant_docs)
         precision = 0
         iteration = 1
         success = True
