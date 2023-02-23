@@ -12,10 +12,7 @@ Zelin Wang, zw2852
 - InfoRetrieval.py
 
 ## How to run
-1. Clone the repository:
-```bash
-git clone https://github.com/samuelliuliuliu666/cs6111-project1
-```
+1. Download Proj1.tar.gz to the repo folder, and uncompress it. Open InfoRetrieval.py.
 
 2. Install dependencies:
 ```bash
@@ -62,3 +59,5 @@ Engine ID: "497c7780958f3ec5b"
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
+
+
